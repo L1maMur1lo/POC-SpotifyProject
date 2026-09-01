@@ -8,7 +8,9 @@ modules/__init__.py
 modules/shared/__init__.py
 modules/shared/settings.py
 modules/shared/database/__init__.py
+modules/shared/database/connection.py
 modules/shared/database/models.py
+modules/shared/database/services.py
 modules/shared/defaults/Queue.py
 modules/shared/defaults/__init__.py
 modules/streaming_history/Create_Queue.py

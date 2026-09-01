@@ -9,4 +9,5 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     DATA_PATH: str
 
+
 settings = Settings()

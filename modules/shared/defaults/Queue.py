@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, field_validator
 
 
-class Check_Item_Queue(BaseModel):
+class Item_Queue(BaseModel):
     track_uri: str
     ms_played: int
     ts: datetime

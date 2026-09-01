@@ -21,8 +21,10 @@ from sqlalchemy.orm import (
     relationship,
 )
 
+
 class Base(MappedAsDataclass, DeclarativeBase):
     pass
+
 
 class Queue(Base):
     """
@@ -54,6 +56,7 @@ class Queue(Base):
         String, server_default='in_queue', init=False
     )
 
+
 class Executions(Base):
     """
     Tabela que registra as execuções do usuario
@@ -65,18 +68,17 @@ class Executions(Base):
     id: Mapped[int] = mapped_column(
         primary_key=True, autoincrement=True, init=False
     )
-    # Associando a musica a execução
-    # (Many-to-One)
-    music: Mapped[Musics] = relationship(
-        'musics',
-        primaryjoin='executions.music_ref == musics.reference',
-        back_populates='executions',
-        lazy='selectin',
-    )
     # Chave estrangeira (musics - reference)
     music_ref: Mapped[str] = mapped_column(
         ForeignKey('musics.reference', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False,
+    )
+    # Associando a musica a execução
+    # (Many-to-One)
+    music: Mapped[Musics] = relationship(
+        'Musics',
+        back_populates='executions',
+        lazy='selectin',
     )
     # Tempo de reprodução da musica durou em milisegundos
     ms_played: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -91,6 +93,7 @@ class Executions(Base):
     # Origem do dado
     source: Mapped[Optional[str]] = mapped_column(String, default='')
 
+
 # Tabela intermediaria de relação entre musicas e artistas
 music_artist_association = Table(
     'music_artist_association',
@@ -98,6 +101,7 @@ music_artist_association = Table(
     Column('music_id', Integer, ForeignKey('musics.id'), primary_key=True),
     Column('artist_id', Integer, ForeignKey('artists.id'), primary_key=True),
 )
+
 
 class Musics(Base):
     """
@@ -117,6 +121,7 @@ class Musics(Base):
     # Lista de artistas (tabela)
     # (Many-to-Many)
     artists: Mapped[List[Artists]] = relationship(
+        'Artists',
         secondary=music_artist_association,
         back_populates='musics',
         lazy='selectin',
@@ -128,8 +133,11 @@ class Musics(Base):
     # Associando uma lista de execuções para a musica
     # (One-to-Many)
     executions: Mapped[List[Executions]] = relationship(
-        'executions', back_populates='music', cascade='all, delete-orphan'
+        'Executions',
+        back_populates='music',
+        cascade='all, delete-orphan'
     )
+
 
 class Artists(Base):
     """
@@ -151,5 +159,8 @@ class Artists(Base):
     # Associando as musicas ao artista
     # (Many-to-Many)
     musics: Mapped[List[Musics]] = relationship(
-        'musics', secondary=music_artist_association, back_populates='artists'
+        'Musics',
+        secondary=music_artist_association,
+        back_populates='artists',
+        lazy='selectin'
     )

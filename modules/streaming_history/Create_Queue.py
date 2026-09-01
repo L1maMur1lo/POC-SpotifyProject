@@ -4,11 +4,12 @@ import os
 import numpy as np
 import pandas as pd
 
+from modules.shared.defaults.Queue import Item_Queue
+from modules.shared.database.services import add_queue_item
 from modules.shared.settings import settings
-from modules.shared.defaults.Queue import Check_Item_Queue
+
 
 class Create_Queue:
-
     def __init__(self):
 
         self.data_path = settings.DATA_PATH
@@ -29,7 +30,9 @@ class Create_Queue:
         logging.info('Iniciando criação da fila')
 
         # Criando uma lista com todos arquivos da pasta
-        files = [file for file in os.listdir(self.data_path) if file.endswith('.json')]
+        files = [
+            file for file in os.listdir(self.data_path) if file.endswith('.json')
+        ]
 
         # Percorrendo cada arquivo da pasta
         for file in files:
@@ -56,25 +59,26 @@ class Create_Queue:
             for index, item in dataframe.iterrows():
                 try:
                     # Validando dados com pydantic
-                    valid_item = Check_Item_Queue(
+                    valid_item = Item_Queue(
                         track_uri=item[cl_track_uri],
                         ms_played=item[cl_ms_played],
                         ts=item[cl_timestamp],
                         offline=item[cl_offline],
                         offline_ts=item[cl_offline_ts],
                         source_file=file,
-                        source_file_row=index
+                        source_file_row=index+1,
                     )
-
-                    # Transformando dados em modelo
-                    new_item = valid_item.model_dump()
-                    print(new_item)
-
-                    # CONTINUAR APARTIR DAQUI...
-                    # OBS: Inserir os dados no banco
-
                 except Exception:
-                    raise Exception('Falha na criação do item')
+                    raise Exception('Falha na validação do item')
+
+                logging.debug(valid_item)
+
+                if add_queue_item(valid_item):
+                    logging.debug('Novo item adicionado a fila')
+
+                else:
+                    logging.info('Não foi possivel salvar o item no banco')
+                
 
 if __name__ == '__main__':
     main = Create_Queue()
