@@ -1,5 +1,3 @@
-import logging
-
 from sqlalchemy import select
 
 from modules.shared.database.connection import get_session

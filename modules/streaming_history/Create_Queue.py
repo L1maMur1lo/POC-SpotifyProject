@@ -4,8 +4,8 @@ import os
 import numpy as np
 import pandas as pd
 
-from modules.shared.defaults.Queue import Item_Queue
 from modules.shared.database.services import add_queue_item
+from modules.shared.defaults.Queue import Item_Queue
 from modules.shared.settings import settings
 
 
@@ -30,12 +30,13 @@ class Create_Queue:
         logging.info('Iniciando criação da fila')
 
         # Criando uma lista com todos arquivos da pasta
-        files = [
-            file for file in os.listdir(self.data_path) if file.endswith('.json')
-        ]
+        files = [file for file in os.listdir(self.data_path) if file.endswith('.json')]
 
         # Percorrendo cada arquivo da pasta
         for file in files:
+            if 'processado' in file:
+                continue
+
             dataframe = pd.read_json(f'{self.data_path}/{file}')
 
             # Selecionando somente as colunas desejadas
@@ -55,6 +56,11 @@ class Create_Queue:
             # Descartando linhas com valores vazios na coluna
             dataframe = columns.dropna(subset=[cl_track_uri])
 
+            # Variaveis de "controle"
+            rows_sucess = 0
+            rows_existing = 0
+            rows_total = len(dataframe)
+
             # Percorendo cada linha do arquivo
             for index, item in dataframe.iterrows():
                 try:
@@ -66,20 +72,55 @@ class Create_Queue:
                         offline=item[cl_offline],
                         offline_ts=item[cl_offline_ts],
                         source_file=file,
-                        source_file_row=index+1,
+                        source_file_row=index + 1,
                     )
                 except Exception:
                     raise Exception('Falha na validação do item')
 
-                logging.debug(valid_item)
+                # logging.debug(valid_item)
 
-                if add_queue_item(valid_item):
-                    logging.debug('Novo item adicionado a fila')
+                try:
+                    if add_queue_item(valid_item):
+                        # Log's de controle
+                        logging.debug('Novo item adicionado a fila')
+                        logging.debug(f'File:{file} Row: {index}, Total: {rows_total}')
+                        rows_sucess += 1
 
-                else:
-                    logging.info('Não foi possivel salvar o item no banco')
-                
+                    else:
+                        # Log's de controle
+                        logging.debug('Item já existe na fila')
+                        logging.debug(f'File:{file} Row: {index}, Total: {rows_total}')
+                        rows_existing += 1
+
+                except Exception:
+                    logging.info('Não foi criar o item no banco')
+                    logging.debug(f'File:{file} Row: {index}, Total: {rows_total}')
+
+            # Log's de controle
+            logging.info(f'{"-" * 100}')
+            logging.info(f'Já existente: {rows_existing}')
+            logging.info(f'Sucesso: {rows_sucess}')
+            logging.info(f'Total: {rows_total}')
+
+            # Renomeia o arquivo para em caso de falha, não processa-lo novamente
+            os.rename(
+                f'{self.data_path}/{file}',
+                f'{self.data_path}/{file.replace(".json", "")}_processado.json',
+            )
+
+            logging.info(f'Arquivo: {file} processado!')
+            logging.info(f'{"-" * 100}')
+
 
 if __name__ == '__main__':
+    logFileName = 'Create_Queue.log'
+
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(levelname)s | %(module)s: %(message)s',
+        encoding='utf-8',
+        handlers=[logging.FileHandler(logFileName), logging.StreamHandler()],
+    )
+
     main = Create_Queue()
     main.execute()

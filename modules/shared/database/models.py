@@ -34,9 +34,7 @@ class Queue(Base):
     __tablename__ = 'queue'
 
     # Campo padrão
-    id: Mapped[int] = mapped_column(
-        primary_key=True, autoincrement=True, init=False
-    )
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
     # Link da track (contem o Id da track)
     track_uri: Mapped[str] = mapped_column(String, nullable=False)
     # Tempo de reprodução da musica durou em milisegundos
@@ -65,9 +63,7 @@ class Executions(Base):
     __tablename__ = 'executions'
 
     # Campo padrão
-    id: Mapped[int] = mapped_column(
-        primary_key=True, autoincrement=True, init=False
-    )
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
     # Chave estrangeira (musics - reference)
     music_ref: Mapped[str] = mapped_column(
         ForeignKey('musics.reference', ondelete='CASCADE', onupdate='CASCADE'),
@@ -83,9 +79,7 @@ class Executions(Base):
     # Tempo de reprodução da musica durou em milisegundos
     ms_played: Mapped[int] = mapped_column(Integer, nullable=False)
     # Data e hora da reprodução
-    played_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    played_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     # Se o usuario estava online durante a reprodução
     offline: Mapped[Optional[bool]] = mapped_column(
         Boolean, server_default='false', default=False
@@ -111,9 +105,7 @@ class Musics(Base):
     __tablename__ = 'musics'
 
     # Campo padrão
-    id: Mapped[int] = mapped_column(
-        primary_key=True, autoincrement=True, init=False
-    )
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
     # Id da track no spotify
     reference: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     # "Nome" da track
@@ -133,9 +125,7 @@ class Musics(Base):
     # Associando uma lista de execuções para a musica
     # (One-to-Many)
     executions: Mapped[List[Executions]] = relationship(
-        'Executions',
-        back_populates='music',
-        cascade='all, delete-orphan'
+        'Executions', back_populates='music', cascade='all, delete-orphan'
     )
 
 
@@ -147,9 +137,7 @@ class Artists(Base):
     __tablename__ = 'artists'
 
     # Campo padrão
-    id: Mapped[int] = mapped_column(
-        primary_key=True, autoincrement=True, init=False
-    )
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
     # Id do artista no spotify
     reference: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     # Nome do artista no spotify
@@ -162,5 +150,5 @@ class Artists(Base):
         'Musics',
         secondary=music_artist_association,
         back_populates='artists',
-        lazy='selectin'
+        lazy='selectin',
     )

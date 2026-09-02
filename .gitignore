@@ -1,2 +1,5 @@
 # Arquivos de Ambiente
 .env
+
+# Arquivos de Log's
+Create_Queue.log
