@@ -21,3 +21,12 @@ class Item_Queue(BaseModel):
         if isinstance(value, str) and ':' in value:
             return value.rsplit(':', maxsplit=1)[-1]
         return value
+
+    @field_validator('offline', mode='before')
+    @classmethod
+    def only_boolean(cls, value) -> bool:
+        """Transforma valores nulos em boolean"""
+        if not type(value) is bool:
+            value = False
+            return value
+        return value

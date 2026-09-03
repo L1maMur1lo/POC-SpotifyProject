@@ -50,10 +50,10 @@ class Create_Queue:
                 ]
             ]
 
-            # Transformando valores nulos em 0 na coluna
+            # Transformando valores nulos em 0 na coluna "offline_timestamp"
             columns[cl_offline_ts] = columns[cl_offline_ts].replace(np.nan, 0)
 
-            # Descartando linhas com valores vazios na coluna
+            # Descartando linhas com valores vazios na coluna "spotify_track_uri"
             dataframe = columns.dropna(subset=[cl_track_uri])
 
             # Variaveis de "controle"
