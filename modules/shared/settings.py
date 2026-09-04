@@ -9,5 +9,12 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     DATA_PATH: str
 
+    CLIENT_ID: str
+    CLIENT_SECRET: str
+    REFRESH_TOKEN: str
+
+    TOKEN_URL: str
+    TRACKS_URL: str
+
 
 settings = Settings()

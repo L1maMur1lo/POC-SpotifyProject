@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, field_validator
 
 
-class Item_Queue(BaseModel):
+class QueueVal(BaseModel):
     track_uri: str
     ms_played: int
     ts: datetime
@@ -26,7 +26,21 @@ class Item_Queue(BaseModel):
     @classmethod
     def only_boolean(cls, value) -> bool:
         """Transforma valores nulos em boolean"""
-        if not type(value) is bool:
+        if type(value) is not bool:
             value = False
             return value
         return value
+
+
+class MusicVal(BaseModel):
+    reference: str
+    title: str
+    artists: list[str]
+    durations_ms: int
+    album_img_url: str
+
+
+class ArtistVal(BaseModel):
+    reference: str
+    name: str
+    profile_img_url: Optional[str]

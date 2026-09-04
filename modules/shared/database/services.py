@@ -1,11 +1,11 @@
 from sqlalchemy import select
 
 from modules.shared.database.connection import get_session
-from modules.shared.database.models import Queue
-from modules.shared.defaults.Queue import Item_Queue
+from modules.shared.database.models import Musics, Queue
+from modules.shared.defaults.Validator import QueueVal
 
 
-def add_queue_item(item: Item_Queue) -> bool:
+def add_queue_item(item: QueueVal) -> bool:
 
     statement = select(Queue).where(
         Queue.source_file == item.source_file,
@@ -21,3 +21,22 @@ def add_queue_item(item: Item_Queue) -> bool:
         return True
 
     return False
+
+
+def missing_tracks() -> list[str]:
+
+    statement = (
+        select(Queue.track_uri)
+        .outerjoin(Musics, Queue.track_uri == Musics.reference)
+        .where(Queue.status == 'in_queue', Musics.reference.is_(None))
+        .group_by(Queue.track_uri)
+    )
+
+    with next(get_session()) as db:
+        result: list[str] = db.execute(statement).scalars().all()
+
+    return result
+
+
+def add_music() -> bool:
+    pass

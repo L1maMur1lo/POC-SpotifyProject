@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from modules.shared.database.services import add_queue_item
-from modules.shared.defaults.Queue import Item_Queue
+from modules.shared.defaults.Validator import QueueVal
 from modules.shared.settings import settings
 
 
@@ -65,7 +65,7 @@ class Create_Queue:
             for index, item in dataframe.iterrows():
                 try:
                     # Validando dados com pydantic
-                    valid_item = Item_Queue(
+                    valid_item = QueueVal(
                         track_uri=item[cl_track_uri],
                         ms_played=item[cl_ms_played],
                         ts=item[cl_timestamp],
