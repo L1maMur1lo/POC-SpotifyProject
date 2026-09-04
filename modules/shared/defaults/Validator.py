@@ -32,15 +32,17 @@ class QueueVal(BaseModel):
         return value
 
 
-class MusicVal(BaseModel):
-    reference: str
-    title: str
-    artists: list[str]
-    durations_ms: int
-    album_img_url: str
-
-
 class ArtistVal(BaseModel):
     reference: str
     name: str
-    profile_img_url: Optional[str]
+    profile_img_url: Optional[str] = None
+    musics: Optional[list[MusicVal]] = []
+
+
+class MusicVal(BaseModel):
+    reference: str
+    title: str
+    artists: list[ArtistVal]
+    duration_ms: int
+    album_img_url: str
+    executions: Optional[list[str]] = []

@@ -1,8 +1,8 @@
 from sqlalchemy import select
 
 from modules.shared.database.connection import get_session
-from modules.shared.database.models import Musics, Queue
-from modules.shared.defaults.Validator import QueueVal
+from modules.shared.database.models import Artists, Musics, Queue
+from modules.shared.defaults.Validator import MusicVal, QueueVal
 
 
 def add_queue_item(item: QueueVal) -> bool:
@@ -38,5 +38,26 @@ def missing_tracks() -> list[str]:
     return result
 
 
-def add_music() -> bool:
-    pass
+def add_data_music_artist(item: MusicVal):
+    with next(get_session()) as db:
+        for artist in item.artists:
+            statement = select(Artists).where(Artists.reference == artist.reference)
+            result = db.execute(statement).scalar_one_or_none()
+
+            if not result:
+                db.add(Artists(**artist.model_dump()))
+            else:
+                continue
+
+        statement = select(Musics).where(Musics.reference == item.reference)
+        result = db.execute(statement).scalar_one_or_none()
+
+        if not result:
+            db.add(Musics(**item.model_dump()))
+
+            
+
+            db.commit()
+            return True
+
+        return False
