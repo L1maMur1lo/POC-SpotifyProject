@@ -1,8 +1,8 @@
 import logging
 
 from modules.shared.api.SpotifyAPI import SpotifyAPI
+from modules.shared.database.models import ArtistsModel, MusicsModel
 from modules.shared.database.services import add_data_music_artist, missing_tracks
-from modules.shared.defaults.Validator import ArtistVal, MusicVal
 
 
 class Search_for_Data:
@@ -29,15 +29,17 @@ class Search_for_Data:
             # Looop para cada musica
             for item in response['tracks']:
                 artists = []
+                artists_names = []
                 # Loop para cada artista
                 for artist in item['artists']:
                     artist_id = artist['id']
                     artist_name = artist['name']
 
                     # "Validando as informações"
-                    artist_data = ArtistVal(reference=artist_id, name=artist_name)
+                    artist_data = ArtistsModel(reference=artist_id, name=artist_name, profile_img_url='')
 
                     artists.append(artist_data)
+                    artists_names.append(artist_name)
 
                 # Imagem do album
                 album_img_url = item['album']['images'][0]['url']
@@ -45,13 +47,14 @@ class Search_for_Data:
                 duration = item['duration_ms']
 
                 # "Validando as informações"
-                music = MusicVal(
+                music = MusicsModel(
                     reference=item['id'],
                     title=item['name'],
-                    artists=artists,
+                    names=', '.join(artists_names),
                     duration_ms=duration,
                     album_img_url=album_img_url,
                 )
+                music.artists = artists
 
                 if add_data_music_artist(music):
                     logging.info(f'{"-" * 100}')

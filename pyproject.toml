@@ -21,7 +21,7 @@ where = ["."]
 include = ["modules*"]
 
 [tool.ruff]
-line-length = 90
+line-length = 94
 extend-exclude = ['migrations']
 
 [tool.ruff.lint]

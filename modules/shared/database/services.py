@@ -1,8 +1,8 @@
 from sqlalchemy import select
 
 from modules.shared.database.connection import get_session
-from modules.shared.database.models import Artists, Musics, Queue
-from modules.shared.defaults.Validator import MusicVal, QueueVal
+from modules.shared.database.models import ArtistsModel, MusicsModel, Queue
+from modules.shared.defaults.Validator import QueueVal
 
 
 def add_queue_item(item: QueueVal) -> bool:
@@ -27,8 +27,8 @@ def missing_tracks() -> list[str]:
 
     statement = (
         select(Queue.track_uri)
-        .outerjoin(Musics, Queue.track_uri == Musics.reference)
-        .where(Queue.status == 'in_queue', Musics.reference.is_(None))
+        .outerjoin(MusicsModel, Queue.track_uri == MusicsModel.reference)
+        .where(Queue.status == 'in_queue', MusicsModel.reference.is_(None))
         .group_by(Queue.track_uri)
     )
 
@@ -38,25 +38,22 @@ def missing_tracks() -> list[str]:
     return result
 
 
-def add_data_music_artist(item: MusicVal):
+def add_data_music_artist(item: MusicsModel):
     with next(get_session()) as db:
         for artist in item.artists:
-            statement = select(Artists).where(Artists.reference == artist.reference)
+            statement = select(ArtistsModel).where(ArtistsModel.reference == artist.reference)
             result = db.execute(statement).scalar_one_or_none()
 
             if not result:
-                db.add(Artists(**artist.model_dump()))
+                db.add(artist)
             else:
                 continue
 
-        statement = select(Musics).where(Musics.reference == item.reference)
+        statement = select(MusicsModel).where(MusicsModel.reference == item.reference)
         result = db.execute(statement).scalar_one_or_none()
 
         if not result:
-            db.add(Musics(**item.model_dump()))
-
-            
-
+            db.add(item)
             db.commit()
             return True
 

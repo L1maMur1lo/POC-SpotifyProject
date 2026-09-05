@@ -55,7 +55,7 @@ class Queue(Base):
     )
 
 
-class Executions(Base):
+class ExecutionsModel(Base):
     """
     Tabela que registra as execuções do usuario
     """
@@ -65,16 +65,8 @@ class Executions(Base):
     # Campo padrão
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
     # Chave estrangeira (musics - reference)
-    music_ref: Mapped[str] = mapped_column(
-        ForeignKey('musics.reference', ondelete='CASCADE', onupdate='CASCADE'),
-        nullable=False,
-    )
-    # Associando a musica a execução
-    # (Many-to-One)
-    music: Mapped[Musics] = relationship(
-        'Musics',
-        back_populates='executions',
-        lazy='selectin',
+    music_reference: Mapped[str] = mapped_column(
+        ForeignKey('musics.reference', ondelete='CASCADE', onupdate='CASCADE'), nullable=False
     )
     # Tempo de reprodução da musica durou em milisegundos
     ms_played: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -87,17 +79,23 @@ class Executions(Base):
     # Origem do dado
     source: Mapped[Optional[str]] = mapped_column(String, default='')
 
+    # Associando a musica a execução
+    # (Many-to-One)
+    music: Mapped[MusicsModel] = relationship(
+        'MusicsModel', back_populates='executions', lazy='selectin', init=False
+    )
+
 
 # Tabela intermediaria de relação entre musicas e artistas
 music_artist_association = Table(
     'music_artist_association',
     Base.metadata,
-    Column('music_id', Integer, ForeignKey('musics.id'), primary_key=True),
-    Column('artist_id', Integer, ForeignKey('artists.id'), primary_key=True),
+    Column('music_reference', String, ForeignKey('musics.reference'), primary_key=True),
+    Column('artist_reference', String, ForeignKey('artists.reference'), primary_key=True),
 )
 
 
-class Musics(Base):
+class MusicsModel(Base):
     """
     Tabela contendo as informações das musicas
     """
@@ -110,26 +108,42 @@ class Musics(Base):
     reference: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     # "Nome" da track
     title: Mapped[str] = mapped_column(String, nullable=False)
-    # Lista de artistas (tabela)
-    # (Many-to-Many)
-    artists: Mapped[List[Artists]] = relationship(
-        'Artists',
-        secondary=music_artist_association,
-        back_populates='musics',
-        lazy='selectin',
-    )
+    # Não tem necessidade pratica este campo, mas visualmente ele é importante
+    names: Mapped[str] = mapped_column(String, nullable=False)
     # Duração em Milisegundos
     duration_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     # Link para a imagem do album
     album_img_url: Mapped[str] = mapped_column(String)
-    # Associando uma lista de execuções para a musica
-    # (One-to-Many)
-    executions: Mapped[List[Executions]] = relationship(
-        'Executions', back_populates='music', cascade='all, delete-orphan'
+
+    # Lista de artistas (tabela)
+    # (Many-to-Many)
+    artists: Mapped[List[ArtistsModel]] = relationship(
+        'ArtistsModel',
+        secondary=music_artist_association,
+        back_populates='musics',
+        lazy='selectin',
+        default_factory=list,
+        init=False
     )
 
+    # Associando uma lista de execuções para a musica
+    # (One-to-Many)
+    executions: Mapped[List[ExecutionsModel]] = relationship(
+        'ExecutionsModel',
+        back_populates='music',
+        cascade='all, delete-orphan',
+        default_factory=list,
+    )
 
-class Artists(Base):
+    @property
+    def artists_names(self) -> List[str]:
+        """
+        Retorna dinamicamente a lista de nomes dos artistas vinculados a esta música.
+        """
+        return [artist.name for artist in self.artists]
+
+
+class ArtistsModel(Base):
     """
     Tabela contendo as informações dos artistas
     """
@@ -143,12 +157,18 @@ class Artists(Base):
     # Nome do artista no spotify
     name: Mapped[str] = mapped_column(String, nullable=False)
     # Link para a imagem do artista
-    profile_img_url: Mapped[str] = mapped_column(String)
+    profile_img_url: Mapped[Optional[str]] = mapped_column(String)
     # Associando as musicas ao artista
     # (Many-to-Many)
-    musics: Mapped[List[Musics]] = relationship(
-        'Musics',
+    musics: Mapped[List[MusicsModel]] = relationship(
+        'MusicsModel',
         secondary=music_artist_association,
         back_populates='artists',
         lazy='selectin',
+        default_factory=list,
     )
+
+    @property
+    def musics_titles(self) -> List[str]:
+        """Retorna dinamicamente apenas os títulos de todas as músicas deste artista."""
+        return [music.title for music in self.musics]
